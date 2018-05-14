@@ -29,12 +29,5 @@ pipeline {
                 sh 'npm run test'
             }
         }
-        stage('Approve') {
-            steps {
-                room = null
-                version = canaryVersion
-                environment = 'Stage'
-            }
-        }
     }
 }
