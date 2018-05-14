@@ -1,0 +1,29 @@
+{
+  "name": "ghostowo",
+  "version": "1.0.0",
+  "description": "A owo.cloud Ghost Storage Adapter",
+  "main": "index.js",
+  "scripts": {
+    "test": "node tests/test.js --harmony"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sr229/ghostowo.git"
+  },
+  "keywords": [
+    "ghost",
+    "blog",
+    "storage",
+    "adater",
+    "owo"
+  ],
+  "author": "sr229",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sr229/ghostowo/issues"
+  },
+  "homepage": "https://github.com/sr229/ghostowo#readme",
+  "dependencies": {
+    "owo.js": "^1.0.2"
+  }
+}

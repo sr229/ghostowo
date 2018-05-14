@@ -8,67 +8,33 @@ def envStage = utils.environmentNamespace('stage')
 def envProd = utils.environmentNamespace('run')
 def setupScript = null
 
-mavenNode {
-  checkout scm
-  if (utils.isCI()) {
-
-    mavenCI{}
-    
-  } else if (utils.isCD()) {
-    /*
-     * Try to load the script ".openshiftio/Jenkinsfile.setup.groovy".
-     * If it exists it must contain two functions named "setupEnvironmentPre()"
-     * and "setupEnvironmentPost()" which should contain code that does any extra
-     * required setup in OpenShift specific for the booster. The Pre version will
-     * be called _before_ the booster objects are created while the Post version
-     * will be called afterwards.
-     */
-    try {
-      setupScript = load "${pwd()}/.openshiftio/Jenkinsfile.setup.groovy"
-    } catch (Exception ex) {
-      echo "Jenkinsfile.setup.groovy not found"
-    }
-    
-    echo 'NOTE: running pipelines for the first time will take longer as build and base docker images are pulled onto the node'
-    container(name: 'maven') {
-      stage('Build Release') {
-        mavenCanaryRelease {
-          version = canaryVersion
+pipeline {
+    agent {
+        docker {
+            image 'node:8-alpine'
+            args '-p 3000:3000'
         }
-        //stash deployment manifests
-        stash includes: '**/*.yml', name: stashName
-      }
     }
-  }
+    environment {
+        CI = 'true'
+    }
+    stages {
+        stage('Build') {
+            steps {
+                sh 'npm install'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'npm run test'
+            }
+        }
+        stage('Approve') {
+            steps {
+                room = null
+                version = canaryVersion
+                environment = 'Stage'
+            }
+        }
+    }
 }
-
-if (utils.isCD()) {
-  node {
-    stage('Rollout to Stage') {
-      unstash stashName
-      setupScript?.setupEnvironmentPre(envStage)
-      apply {
-        environment = envStage
-      }
-      setupScript?.setupEnvironmentPost(envStage)
-    }
-
-    stage('Approve') {
-      approve {
-        room = null
-        version = canaryVersion
-        environment = 'Stage'
-      }
-    }
-    
-    stage('Rollout to Run') {
-      unstash stashName
-      setupScript?.setupEnvironmentPre(envProd)
-      apply {
-        environment = envProd
-      }
-      setupScript?.setupEnvironmentPost(envProd)
-    }
-  }
-}
-
